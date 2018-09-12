@@ -1,0 +1,27 @@
+# Data
+
+* Need place data for total pop. and race by ethnicity 1980-2010
+* Need to locate places inside CBSAs and Regions: but not all places exist across all periods. So need place coordinates spanning multiple decades. These should be available through NHGIS. There are individual files w/ point coordinates for places for each census.
+* Chris used 2010 CBSA boundares. Also on NHGIS
+* Chris took steps to retain principal cities that changed over time
+* For non-principal cities, then, is the idea to retain all places that existed in at least once census period 1980-2010? That seems to be the case. So the dataset of places is the distinct set of places that existed across this period, with principal cities in some cases being altered to link past FIPS/GISJOIN codes to current FIPS/GISJOIN codes.
+* Need to identify places as principal cities. I can find delineation files for 2013 [here](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html). 
+
+
+# Steps
+* find  
+
+```sql
+# Remove Puerto Rico
+pc<-pc[which(pc$State !=72),]
+#Pheonix Lake-Cedar Ridge changed from 656871 to 656870
+pc[which(pc$FIPS==656871),"FIPS"]<-656870
+#Honolulu changed from 1517000 to 1571550
+pc[which(pc$FIPS==1517000),"FIPS"]<-1571550
+#Union NJ changed to Union City 3474510 to 3474630
+pc[which(pc$FIPS==3474510),"FIPS"]<-3474630
+#Edison NJ merged with Metuchen
+pc[which(pc$FIPS==3420260),"FIPS"]<-3445690
+#Three principal cities no longer exist????
+pc<-subset(pc,pc$FIPS %in% c(2670545,3422180,3477870)==FALSE)
+```
