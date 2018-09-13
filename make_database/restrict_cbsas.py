@@ -154,3 +154,9 @@ subset_places.set_index('nhgisplace10', inplace=True)
 subset_places.to_sql('subset_places', con, if_exists='replace')
 
 con.close()
+
+'''
+next steps:
+* calc entropy at US, region, cbsa, and place levels
+* decompose Theil's H
+'''
