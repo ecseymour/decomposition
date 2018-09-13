@@ -119,11 +119,6 @@ B.place AS place10,
 B.nhgisplace AS nhgisplace10, 
 B.gisjoin AS place_gisjoin10,
 D.B78AA2000 AS pop00,
-D.AE7AA2000 AS white00,
-D.AE7AB2000 AS black00,
-D.AE7AD2000 AS asian00,
-D.AE7AG2000 + D.AE7AH2000 + D.AE7AI2000 + D.AE7AJ2000 + D.AE7AK2000 + D.AE7AL2000 AS hisp00,
-D.AE7AC2000 + D.AE7AE2000 + D.AE7AF2000 AS other00,
 C.B78AA2010 AS pop10,
 C.AE7AA2010 AS white10,
 C.AE7AB2010 AS black10,
@@ -147,16 +142,99 @@ all_places = pd.read_sql(qry, con, index_col='place_gisjoin10')
 
 # reduce all places to those inside one of our previously identified CBSAs
 subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geoid10')
-print "subset places: {}".format(len(subset_places))
+print "subset places 2000-2010: {}".format(len(subset_places))
 # reset index to place from cbsa
 subset_places.set_index('nhgisplace10', inplace=True)
 # write to db
-subset_places.to_sql('subset_places', con, if_exists='replace')
+subset_places.to_sql('subset_places_00_10', con, if_exists='replace')
 
+#######################################################
+'''
+make table with places existing 2000 and 1990
+need to change vars included in race categories
+5319 places retained
+'''
+
+qry = '''
+SELECT A.geoid10 AS cbsa_geoid10, 
+A.name10 AS cbsa_name,
+B.place AS place00,
+B.nhgisplace AS nhgisplace00, 
+B.gisjoin AS place_gisjoin00,
+C.B78AA2000 AS pop00,
+C.AE7AA2000 AS white00,
+C.AE7AB2000 AS black00,
+C.AE7AD2000 AS asian00,
+C.AE7AG2000 + C.AE7AH2000 + C.AE7AI2000 + C.AE7AJ2000 + C.AE7AK2000 + C.AE7AL2000 AS hisp00,
+C.AE7AC2000 + C.AE7AE2000 + C.AE7AF2000 AS other00,
+D.B78AA1990 AS pop90
+FROM us_cbsa_2010 AS A, us_place_point_2000 AS B --qry cbsa and place points tbls--
+JOIN nhgis_race_place AS C 
+	ON B.gisjoin = C.GJOIN2000 --join to race data using '00 gisjoin--
+JOIN nhgis_race_place AS D
+	ON B.gisjoin = D.GJOIN1990 --join to race data using '90 gisjoin--
+WHERE ST_Contains(A.geometry, B.geometry) --cbsa contains 2000 place points--
+AND B.ROWID IN (SELECT ROWID FROM SpatialIndex --use spat index--
+	WHERE f_table_name='us_place_point_2000' AND search_frame=A.geometry)
+AND B.place NOT LIKE "%CDP" --exclude CDPs from results-- 
+AND C.B78AA2000 >= 1 AND C.B78AA2000 <> '' --where 2000 pop >= 1--
+AND D.B78AA1990 >= 1 AND D.B78AA1990 <> '' --where 1990 pop >= 1--
+;
+'''
+all_places = pd.read_sql(qry, con, index_col='place_gisjoin00')
+
+# reduce all places to those inside one of our previously identified CBSAs
+subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geoid10')
+print "subset places 1990-2000: {}".format(len(subset_places))
+# reset index to place from cbsa
+subset_places.set_index('nhgisplace00', inplace=True)
+# write to db
+subset_places.to_sql('subset_places_90_00', con, if_exists='replace')
+
+#######################################################
+'''
+make table with places existing 1980 and 1990
+GJOIN in NHGIS race table changes even for places
+that continue to exist w/out change.
+join on 1990 GJOIN, but restrict based on presence of 
+1980 population values
+'''
+
+qry = '''
+SELECT A.geoid10 AS cbsa_geoid10, 
+A.name10 AS cbsa_name,
+B.place AS place90,
+B.nhgisplace AS nhgisplace90, 
+B.gisjoin AS place_gisjoin90,
+C.B78AA1990 AS pop90,
+C.AE7AA1990 AS white90,
+C.AE7AB1990 AS black90,
+C.AE7AD1990 AS asian90,
+C.AE7AG1990 + C.AE7AH1990 + C.AE7AI1990 + C.AE7AJ1990 + C.AE7AK1990 AS hisp90,
+C.AE7AC2000 + C.AE7AE2000 AS other90,
+C.B78AA1980 AS pop80
+FROM us_cbsa_2010 AS A, us_place_point_1990 AS B --qry cbsa and place points tbls--
+JOIN nhgis_race_place AS C 
+	ON B.gisjoin = C.GJOIN1990
+WHERE ST_Contains(A.geometry, B.geometry)
+AND B.ROWID IN (SELECT ROWID FROM SpatialIndex --use spat index--
+	WHERE f_table_name='us_place_point_1990' AND search_frame=A.geometry)
+AND B.place NOT LIKE "%CDP" --exclude CDPs from results-- 
+AND C.B78AA1990 >= 1 AND C.B78AA1990 <> '' --where 1990 pop >= 1--
+AND C.B78AA1980 >= 1 AND C.B78AA1980 <> '' --where 1980 pop >= 1--
+;
+'''
+all_places = pd.read_sql(qry, con, index_col='place_gisjoin90')
+
+# reduce all places to those inside one of our previously identified CBSAs
+subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geoid10')
+print "subset places 1980-1990: {}".format(len(subset_places))
+# reset index to place from cbsa
+subset_places.set_index('nhgisplace90', inplace=True)
+# write to db
+subset_places.to_sql('subset_places_80_90', con, if_exists='replace')
+
+
+
+#######################################################
 con.close()
-
-'''
-next steps:
-* calc entropy at US, region, cbsa, and place levels
-* decompose Theil's H
-'''

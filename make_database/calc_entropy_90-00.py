@@ -17,8 +17,8 @@ con.enable_load_extension(True)
 con.execute('SELECT load_extension("mod_spatialite");')
 cur = con.cursor()
 
-qry = "SELECT * FROM subset_places_00_10;"
-df = pd.read_sql(qry, con, index_col='nhgisplace10')
+qry = "SELECT * FROM subset_places_90_00;"
+df = pd.read_sql(qry, con, index_col='nhgisplace00')
 print "places in subset: {}".format(len(df))
 ############################################################
 ############################################################
@@ -29,7 +29,7 @@ print "places in subset: {}".format(len(df))
 calc E for US
 sum across places and calc E
 '''
-cols = ['white10', 'black10', 'asian10', 'hisp10', 'other10']
+cols = ['white00', 'black00', 'asian00', 'hisp00', 'other00']
 total_us = pd.DataFrame(df[cols].sum(axis=0))
 total_us.columns = ['count']
 total_us['share'] = total_us['count'] * 1.0 / total_us['count'].sum(axis=0)
@@ -54,13 +54,13 @@ for c in cols:
 	df.loc[df['p{}'.format(c)] > 0.0, 'Ep'] += df['p{}'.format(c)] * np.log(1.0/df['p{}'.format(c)])
 df['Ep'] = df['Ep'] / np.log(len(cols))
 
-# print df[['place10', 'Ep']].sort_values('Ep', ascending=False).head(10)
+# print df[['place00', 'Ep']].sort_values('Ep', ascending=False).head(10)
 
 # calc Hpu: compare each place to us
-Tu = df['pop10'].sum(axis=0)
+Tu = df['pop00'].sum(axis=0)
 Hpu = 0
 for i, x in df.iterrows():
-	Hpu += x['pop10'] * (Eu - x['Ep'])
+	Hpu += x['pop00'] * (Eu - x['Ep'])
 Hpu = (1.0 / (Tu * Eu)) * Hpu 
 
 print "Hpu: {}".format(round(Hpu,3))
@@ -73,12 +73,12 @@ print "Hpu: {}".format(round(Hpu,3))
 calc btw regions H
 aggregate by region, compare to us
 '''
-cols = ['region', 'pop10', 'white10', 'black10', 'asian10', 'hisp10', 'other10']
+cols = ['region', 'pop00', 'white00', 'black00', 'asian00', 'hisp00', 'other00']
 regions = df[cols].groupby('region').sum()
 
 # calc E for each region
 # create region level percentages
-cols = ['white10', 'black10', 'asian10', 'hisp10', 'other10']
+cols = ['white00', 'black00', 'asian00', 'hisp00', 'other00']
 for c in cols:
 	regions['p{}'.format(c)] = regions['{}'.format(c)] * 1.0 / regions[cols].sum(axis=1)
 
@@ -88,10 +88,10 @@ for c in cols:
 regions['Er'] = regions['Er'] / np.log(len(cols))
 
 # calc Hru: compare each region to us
-Tu = df['pop10'].sum(axis=0)
+Tu = df['pop00'].sum(axis=0)
 Hru = 0
 for i, x in regions.iterrows():
-	Hru += x['pop10'] * (Eu - x['Er'])
+	Hru += x['pop00'] * (Eu - x['Er'])
 Hru = (1.0 / (Tu * Eu)) * Hru 
 
 print "Hru: {}".format(round(Hru,3))
@@ -103,12 +103,12 @@ print "Hru: {}".format(round(Hru,3))
 '''
 agg by cbsa, compare to region. sum across regions
 '''
-cols = ['cbsa_geoid10', 'pop10', 'white10', 'black10', 'asian10', 'hisp10', 'other10']
+cols = ['cbsa_geoid10', 'pop00', 'white00', 'black00', 'asian00', 'hisp00', 'other00']
 cbsas = df[cols].groupby('cbsa_geoid10').sum()
 
 # calc E for each CBSA
 # create CBSA level percentages
-cols = ['white10', 'black10', 'asian10', 'hisp10', 'other10']
+cols = ['white00', 'black00', 'asian00', 'hisp00', 'other00']
 for c in cols:
 	cbsas['p{}'.format(c)] = cbsas['{}'.format(c)] * 1.0 / cbsas[cols].sum(axis=1)
 
@@ -125,10 +125,10 @@ cbsas = pd.merge(cbsas, cbsa_regions, left_index=True, right_index=True)
 # need to compare CBSAs to region in which they are nested
 Hmr = 0
 for i, x in regions.iterrows():
-	Tr = x['pop10'] 
+	Tr = x['pop00'] 
 	Er = x['Er']
 	for i2, x2 in cbsas.loc[cbsas['region']==i].iterrows(): 
-		Tm = x2['pop10']
+		Tm = x2['pop00']
 		Em = x2['Em']
 		Hmr += Tm * (Er - Em)
 Hmr = (1.0 / (Tu * Eu)) * Hmr 
@@ -151,19 +151,19 @@ then compare to cbsa values
 DOES EACH GROUP LEVEL GET ENTERED SEPARATELY?
 '''
 # create groups based on pop change past decade
-df['chg0010'] = (df['pop10'] - df['pop00']) * 1.0 / df['pop00'] * 100
+df['chg9000'] = (df['pop00'] - df['pop90']) * 1.0 / df['pop90'] * 100
 df['chg_cat'] = 0
-df.loc[df['chg0010'] < 0, 'chg_cat'] = 'loss'
-# df.loc[ (df['chg0010'] >= 0) & (df['chg0010'] < 5), 'chg_cat'] = 'growth1'
-df.loc[ df['chg0010'] >= 0, 'chg_cat'] = 'growth1'
+df.loc[df['chg9000'] < 0, 'chg_cat'] = 'loss'
+# df.loc[ (df['chg9000'] >= 0) & (df['chg9000'] < 5), 'chg_cat'] = 'growth1'
+df.loc[ df['chg9000'] >= 0, 'chg_cat'] = 'growth1'
 print "+" * 50
 print "count in each group"
 print df.groupby('chg_cat').size()
 
 # # # create groups based on pop change past decade
 # df['chg_cat'] = 0
-# df.loc[df['pop10'] >= 20000, 'chg_cat'] = '50k+'
-# df.loc[df['pop10'] < 20000, 'chg_cat'] = 'under50k'
+# df.loc[df['pop00'] >= 20000, 'chg_cat'] = '50k+'
+# df.loc[df['pop00'] < 20000, 'chg_cat'] = 'under50k'
 
 '''
 Harrisburg-Carlisle, PA does not have a city in 2010 w/50k+ inhabitants
@@ -179,12 +179,12 @@ for g in groups:
 	Hgm = 0
 	for i, x in cbsas.iterrows():
 		# agg places by group for each cbsa
-		cols = ['chg_cat', 'pop10', 'white10', 'black10', 'asian10', 'hisp10', 'other10']
+		cols = ['chg_cat', 'pop00', 'white00', 'black00', 'asian00', 'hisp00', 'other00']
 		groups = df.loc[(df['cbsa_geoid10']==i) & (df['chg_cat']==g)][cols].groupby('chg_cat').sum()
 
 		# calc E for each group level
 		# gen percentages BEWARE OF ZEROS
-		cols = ['white10', 'black10', 'asian10', 'hisp10', 'other10']
+		cols = ['white00', 'black00', 'asian00', 'hisp00', 'other00']
 		for c in cols:
 			groups['p{}'.format(c)] = groups['{}'.format(c)] * 1.0 / groups[cols].sum(axis=1)
 
@@ -192,8 +192,8 @@ for g in groups:
 		for c in cols:
 			groups.loc[groups['p{}'.format(c)] > 0.0, 'Eg'] += groups['p{}'.format(c)] * np.log(1.0/groups['p{}'.format(c)])
 		groups['Eg'] = groups['Eg'] / np.log(len(cols))
-		# print groups[['pop10', 'Em']]		
-		Hgm += groups['pop10'] * (Em - groups['Eg'])
+		# print groups[['pop00', 'Em']]		
+		Hgm += groups['pop00'] * (Em - groups['Eg'])
 
 	Hgm = (1.0 / (Tu * Eu)) * Hgm
 	print "Hgm: {}".format(Hgm)
