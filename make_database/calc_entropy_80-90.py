@@ -17,7 +17,7 @@ con.enable_load_extension(True)
 con.execute('SELECT load_extension("mod_spatialite");')
 cur = con.cursor()
 
-qry = "SELECT * FROM subset_places_80_90 WHERE cbsa_geoid10 <> '40140';"
+qry = "SELECT * FROM subset_places_80_90;"
 df = pd.read_sql(qry, con, index_col='nhgisplace90')
 print "places in subset: {}".format(len(df))
 ############################################################
@@ -197,8 +197,9 @@ for g in groups:
 			for c in cols:
 				groups.loc[groups['p{}'.format(c)] > 0.0, 'Eg'] += groups['p{}'.format(c)] * np.log(1.0/groups['p{}'.format(c)])
 			groups['Eg'] = groups['Eg'] / np.log(len(cols))
-			# print groups[['pop90', 'Em']]		
-			Hgm += groups['pop90'] * (Em - groups['Eg'])
+			# print groups[['pop90', 'Em']]
+			Hgm += groups['pop90'] * (x['Em'] - groups['Eg'])
+
 
 	Hgm = (1.0 / (Tu * Eu)) * Hgm
 	print "Hgm: {}".format(Hgm)

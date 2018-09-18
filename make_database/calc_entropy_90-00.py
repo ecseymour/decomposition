@@ -192,8 +192,9 @@ for g in groups:
 		for c in cols:
 			groups.loc[groups['p{}'.format(c)] > 0.0, 'Eg'] += groups['p{}'.format(c)] * np.log(1.0/groups['p{}'.format(c)])
 		groups['Eg'] = groups['Eg'] / np.log(len(cols))
-		# print groups[['pop00', 'Em']]		
-		Hgm += groups['pop00'] * (Em - groups['Eg'])
+		# print groups[['pop00', 'Em']]
+		Em = x['Em']		
+		Hgm += groups['pop00'] * (x['Em'] - groups['Eg'])
 
 	Hgm = (1.0 / (Tu * Eu)) * Hgm
 	print "Hgm: {}".format(Hgm)

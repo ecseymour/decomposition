@@ -8,6 +8,7 @@ exclude CDPs?
 
 from pysqlite2 import dbapi2 as sql
 import pandas as pd
+import numpy as np
 
 # connect to db
 db = "/home/eric/Documents/franklin/fowler/data/decomposition.sqlite"
@@ -145,6 +146,18 @@ subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geo
 print "subset places 2000-2010: {}".format(len(subset_places))
 # reset index to place from cbsa
 subset_places.set_index('nhgisplace10', inplace=True)
+
+# calc Ep
+# create place level percentages
+cols = ['white10', 'black10', 'asian10', 'hisp10', 'other10']
+for c in cols:
+	subset_places['p{}'.format(c)] = subset_places['{}'.format(c)] * 1.0 / subset_places[cols].sum(axis=1)
+
+subset_places['Ep'] = 0
+for c in cols:
+	subset_places.loc[subset_places['p{}'.format(c)] > 0.0, 'Ep'] += subset_places['p{}'.format(c)] * np.log(1.0/subset_places['p{}'.format(c)])
+subset_places['Ep'] = subset_places['Ep'] / np.log(len(cols))
+
 # write to db
 subset_places.to_sql('subset_places_00_10', con, if_exists='replace')
 
@@ -188,6 +201,18 @@ subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geo
 print "subset places 1990-2000: {}".format(len(subset_places))
 # reset index to place from cbsa
 subset_places.set_index('nhgisplace00', inplace=True)
+
+# calc Ep
+# create place level percentages
+cols = ['white00', 'black00', 'asian00', 'hisp00', 'other00']
+for c in cols:
+	subset_places['p{}'.format(c)] = subset_places['{}'.format(c)] * 1.0 / subset_places[cols].sum(axis=1)
+
+subset_places['Ep'] = 0
+for c in cols:
+	subset_places.loc[subset_places['p{}'.format(c)] > 0.0, 'Ep'] += subset_places['p{}'.format(c)] * np.log(1.0/subset_places['p{}'.format(c)])
+subset_places['Ep'] = subset_places['Ep'] / np.log(len(cols))
+
 # write to db
 subset_places.to_sql('subset_places_90_00', con, if_exists='replace')
 
@@ -231,10 +256,20 @@ subset_places = pd.merge(merged, all_places, left_index=True, right_on='cbsa_geo
 print "subset places 1980-1990: {}".format(len(subset_places))
 # reset index to place from cbsa
 subset_places.set_index('nhgisplace90', inplace=True)
+
+# calc Ep
+# create place level percentages
+cols = ['white90', 'black90', 'asian90', 'hisp90', 'other90']
+for c in cols:
+	subset_places['p{}'.format(c)] = subset_places['{}'.format(c)] * 1.0 / subset_places[cols].sum(axis=1)
+
+subset_places['Ep'] = 0
+for c in cols:
+	subset_places.loc[subset_places['p{}'.format(c)] > 0.0, 'Ep'] += subset_places['p{}'.format(c)] * np.log(1.0/subset_places['p{}'.format(c)])
+subset_places['Ep'] = subset_places['Ep'] / np.log(len(cols))
+
+
 # write to db
 subset_places.to_sql('subset_places_80_90', con, if_exists='replace')
-
-
-
 #######################################################
 con.close()

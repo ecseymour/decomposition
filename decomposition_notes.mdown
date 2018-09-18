@@ -26,3 +26,11 @@ pc[which(pc$FIPS==3420260),"FIPS"]<-3445690
 #Three principal cities no longer exist????
 pc<-subset(pc,pc$FIPS %in% c(2670545,3422180,3477870)==FALSE)
 ```
+
+
+## Interpretation
+Shrinking places were more diverse in 1990, negatively impacting metro segregation, but their contribution to segregation has increased to the point of positively contributing to within-metro segregation. This may reflect shrinking places growing homogeneity through white flight. But Detroit and other large shrinking cities have grown in diversity. Of course these measures are relative to changes in other places. Do we have theory to guide analysis and interpretation? 
+
+## Descriptives 
+
+Need to generate useful descriptives for project. These could include boxplots of diversity scores for growing and shrinking places for each period. But the real comparison is between groups of places and their respective CBSAs, but that is what is accomplished through the decomposition. 
