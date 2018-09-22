@@ -79,42 +79,15 @@ for p in periods:
 	Hru = (1.0 / (Tu * Eu)) * Hru 
 	print "Hru: {}".format(round(Hru,3))
 	############################################################
-	# calc btw CBSA component: GROWING vs SHRINKING/STAGNANT
+	# calc btw loss metro component
 	############################################################
 	# group CBSAs into growing/shrinking using aggregated place pop
 	cols = ['cbsa_geoid10','pop{}'.format(start), 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
 	cbsas = df[cols].groupby('cbsa_geoid10').sum()
 	cbsas['chg{}{}'.format(start,end)] = (cbsas['pop{}'.format(end)] - cbsas['pop{}'.format(start)]) * 1.0 / cbsas['pop{}'.format(start)] * 100
-	cbsas['chg_cat'] = 99
+	cbsas['chg_cat'] = -99
 	cbsas.loc[cbsas['chg{}{}'.format(start,end)] < 0, 'chg_cat'] = 'loss'
 	cbsas.loc[cbsas['chg{}{}'.format(start,end)] >= 0, 'chg_cat'] = 'growth'
-	print "+" * 25
-	print "count in each CBSA group"
-	print cbsas.groupby('chg_cat').size()
-	# aggregate CBSAs based on growth/loss
-	grouped_cbsas = cbsas.groupby('chg_cat').sum()
-	cols = ['white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
-	for c in cols:
-		grouped_cbsas['p{}'.format(c)] = grouped_cbsas['{}'.format(c)] * 1.0 / grouped_cbsas[cols].sum(axis=1)
-	# calc diversity for aggregated growth/loss CBSAs
-	grouped_cbsas['Er'] = 0
-	for c in cols:
-		grouped_cbsas.loc[grouped_cbsas['p{}'.format(c)] > 0.0, 'Er'] += grouped_cbsas['p{}'.format(c)] * np.log(1.0/grouped_cbsas['p{}'.format(c)])
-	grouped_cbsas['Er'] = grouped_cbsas['Er'] / np.log(len(cols))
-	# decomposition
-	# calc Hru: compare each region to us
-	Hru = 0
-	for i, x in grouped_cbsas.iterrows():
-		Hru += x['pop{}'.format(end)] * (Eu - x['Er'])
-	Hru = (1.0 / (Tu * Eu)) * Hru 
-	print "Hru: {}".format(round(Hru,3))
-	print "+" * 25
-	############################################################
-	# calc btw CBSA component
-	############################################################
-	cols = ['cbsa_geoid10', 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
-	cbsas = df[cols].groupby('cbsa_geoid10').sum()
-	# calc E for each CBSA
 	# create CBSA level percentages
 	cols = ['white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
 	for c in cols:
@@ -129,25 +102,52 @@ for p in periods:
 	cbsas = pd.merge(cbsas, cbsa_regions, left_index=True, right_index=True)
 	# for each region, compare Em to Er, summing across regions
 	# need to compare CBSAs to region in which they are nested
+	chg_levels = ['growth', 'loss']
+	Hmr = 0
+ 	for l in chg_levels:
+		for i, x in regions.iterrows():
+			Tr = x['pop{}'.format(end)] 
+			Er = x['Er']
+			for i2, x2 in cbsas.loc[(cbsas['region']==i)&(cbsas['chg_cat']==l)].iterrows(): 
+				Tm = x2['pop{}'.format(end)]
+				Em = x2['Em']
+				Hmr += Tm * (Er - Em)
+		Hmr = (1.0 / (Tu * Eu)) * Hmr 
+		print "Hmr {} metros: {}".format(l, round(Hmr,3))
+
+	# total btw metros
 	Hmr = 0
 	for i, x in regions.iterrows():
 		Tr = x['pop{}'.format(end)] 
 		Er = x['Er']
-		for i2, x2 in cbsas.loc[cbsas['region']==i].iterrows(): 
+		for i2, x2 in cbsas.loc[(cbsas['region']==i)].iterrows(): 
 			Tm = x2['pop{}'.format(end)]
 			Em = x2['Em']
 			Hmr += Tm * (Er - Em)
 	Hmr = (1.0 / (Tu * Eu)) * Hmr 
+	print "Hmr all metros: {}".format(round(Hmr,3))
+	############################################################
+	'''
+	calc btw places H separately in growing and shrinking metros
+	does placing this below between metro exhaust decomposition?
+	it should. sum to test
+	'''
+	############################################################
+	# for level in growth/loss: report separate Hpm values for cbsas based on level
+	for l in chg_levels:
+		# for each cbsa by level
+		Hpm = 0
+		for i, x in cbsas.loc[cbsas['chg_cat']==l].iterrows():
+			# for each place in each cbsa in each level
+			for i2, x2 in df.loc[df['cbsa_geoid10']==i].iterrows():
+				Hpm += x2['pop{}'.format(end)] * (x['Em'] - x2['Ep'])
+		Hpm = (1.0 / (Tu * Eu)) * Hpm
+		print "Hpm {} metros: {}".format(l, round(Hpm, 3))
 
-	print "Hmr: {}".format(round(Hmr,3))
-	# residual is within CBSA component
-	print "w/in Ms: {}".format(round(Hpu - Hru - Hmr, 3))
+
 	############################################################
 	# calc btw group component within CBSAs
 	############################################################
-	# create dict to save for analysis for every cbsa
-	group_dict = {}
-
 	# create groups based on pop change past decade
 	df['chg{}{}'.format(start,end)] = (df['pop{}'.format(end)] - df['pop{}'.format(start)]) * 1.0 / df['pop{}'.format(start)] * 100
 	df['chg_cat'] = 0
@@ -157,55 +157,48 @@ for p in periods:
 	print "count in each group"
 	print df.groupby('chg_cat').size()
 
-	groups = df['chg_cat'].unique()
-	for g in groups:
-		print "+" * 5
-		print g
+	data_dict = {}
+	levels = ['growth', 'loss']
+	for g in levels:
+		data_dict[g] = {'loss' : 0, 'growth': 0, 'total': 0}
+		# separately iterate through growth and loss CBSAs
+		for i, x in cbsas.loc[cbsas['chg_cat']==g].iterrows():
+			# for each cbsa (in each CBSA growth/loss category), compare group diversity to cbsa diversity (btw groups w/in metros)
+			for g2 in levels:
+				cols = ['chg_cat', 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
+				groups = df.loc[(df['cbsa_geoid10']==i) & (df['chg_cat']==g2)][cols].groupby('chg_cat').sum()
+				if groups.empty:
+					pass
+				else:
+					cols = ['white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
+					for c in cols:
+						groups['p{}'.format(c)] = groups['{}'.format(c)] * 1.0 / groups[cols].sum(axis=1)
+					groups['Eg'] = 0
+					for c in cols:
+						groups.loc[groups['p{}'.format(c)] > 0.0, 'Eg'] += groups['p{}'.format(c)] * np.log(1.0/groups['p{}'.format(c)])
+					groups['Eg'] = groups['Eg'] / np.log(len(cols))
+					data_dict[g][g2] += groups['pop{}'.format(end)].item() * (x['Em'] - groups['Eg'].item())
+					data_dict[g]['total'] += groups['pop{}'.format(end)].item() * (x['Em'] - groups['Eg'].item())
 
-		Hgm = 0
-		for i, x in cbsas.iterrows():
-			if i not in group_dict:
-				group_dict[i] = {}
-				group_dict[i]['name10'] = None
-			# agg places by group for each cbsa
-			cols = ['chg_cat', 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
-			groups = df.loc[(df['cbsa_geoid10']==i) & (df['chg_cat']==g)][cols].groupby('chg_cat').sum()
-			if groups.empty:
-				pass
-			else:
-				cols = ['white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
-				for c in cols:
-					groups['p{}'.format(c)] = groups['{}'.format(c)] * 1.0 / groups[cols].sum(axis=1)
-				groups['Eg'] = 0
-				for c in cols:
-					groups.loc[groups['p{}'.format(c)] > 0.0, 'Eg'] += groups['p{}'.format(c)] * np.log(1.0/groups['p{}'.format(c)])
-				groups['Eg'] = groups['Eg'] / np.log(len(cols))
-				Hgm += groups['pop{}'.format(end)] * (x['Em'] - groups['Eg'])
+				# if i=='34980':
+				# 	print "-" * 4
+				# 	print g2, groups['Eg'].item(), x['Em']		
+				if g=='growth' and g2=='loss' and not groups.empty:
+					if groups['Eg'].item() > x['Em']:
+						try:
+							print i, g2, groups['Eg'].item(), x['Em']
+						except:
+							print i, g2
 
-				group_dict[i]['cbsa'] = x['Em']
-				group_dict[i]["{}_E".format(g)] = groups['Eg'].item()
-				group_dict[i]["{}_Pop".format(g)] = groups['pop{}'.format(end)].item()
+	# scale H
+	for g in levels:
+		for g2 in ['growth', 'loss', 'total']:
+			data_dict[g][g2] = round((1.0 / Tu*Eu) * data_dict[g][g2], 5)
+	
+	print '+' * 2 
+	for k, v in data_dict.iteritems():
+		print k, v
+	print '+' * 2 
 
-		for i, x in df.iterrows():
-			group_dict[x['cbsa_geoid10']]['name10'] = x['name10']
-					
-		group_data = pd.DataFrame.from_dict(group_dict, orient='index')
-		data_dir = "/home/eric/Documents/franklin/fowler/data/"
-		group_data.to_csv(data_dir+'cbsa_group_data_{}-{}.csv'.format(start, end), index_label='FIPS')
-
-		Hgm = (1.0 / (Tu * Eu)) * Hgm
-		print "Hgm: {}".format(Hgm)
-
-	############################################################
-	# calc btw place component within CBSAs
-	############################################################
-	Hpm = 0
-	for i, x in cbsas.iterrows():
-		cols = ['chg_cat', 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
-		for i2, x2 in df.loc[df['cbsa_geoid10']==i].iterrows():
-			Hpm += x2['pop{}'.format(end)] * (x['Em'] - x2['Ep'])
-
-	Hpm = (1.0 / (Tu * Eu)) * Hpm
-	print "Hpm: {}".format(Hpm)
 
 con.close()

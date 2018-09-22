@@ -34,3 +34,31 @@ Shrinking places were more diverse in 1990, negatively impacting metro segregati
 ## Descriptives 
 
 Need to generate useful descriptives for project. These could include boxplots of diversity scores for growing and shrinking places for each period. But the real comparison is between groups of places and their respective CBSAs, but that is what is accomplished through the decomposition. 
+
+## Revisions
+CF wants to replace geographic regions w/ regions defined as 1) all growing metros and 2) all shrinking metros. So the first level of decomposition accounts for segregation between these two "regions." In retrospect, I am not sure this will do what he wants, which is account for/remove the context of being in a growing or losing metro before examining the grouped places w/in metros component. Though it may be necessary to have an adequate number of subunits in lower levels of the decomposition. In any event, below the region-level decomposition, I think we want to/ must account for between-metro segregation with each region. This calculation is the sum of the weighted differences btw growing metros and the overall diversity of growing metros ("region") and the diffs btw shrinking metros and the overall diversity of shrinking metros ("region"). Beneath this level we want to decompose within metro segregation into the between-group component based on grouping places into growth/loss groups. The last element of the decomposition comes from segregation between places within groups.
+
+I have a hard time thinking about segregation between non-geographically related areas at the macro scale, particularly between region and between metro (within region) levels of segregation when the regions are based on sorting growing from losing metros. This can make for strange bedfellows and is non-intuitive. Can we not still decompose between growth and loss metros at the next scale down? Parisi does something like this by decomposing CBSAs into metro, micro, and fringe. We can adapt this by decomposing CBSAs into growth and loss. The calc for each metro group is the sum of the weighted diffs btw region diversity and metro diversity. Then we move down and separately decompose between group segregation 1) within loss and 2) within growth metros.
+
+__initial schema__
+* between regions (geogrpahic)
+* between metros w/in regions
+* betweek groups (aggregated places) w/in metros
+    - decomposed into growth and loss groups
+
+__revised schema__
+* between regions (CBSAs sorted by growth/loss)
+* between metros w/in regions 
+    - between (growth) metros (w/in growth regions)
+    - between (loss) metros (w/in loss regions). 
+* between groups within growth metros within growth regions
+    - decomposed into growth and loss groups
+* between groups within loss metros within loss regions
+    - decomposed into growth and loss groups
+* between places within groups
+
+Concern is less about contribution to overall H score, more about contribution to w/in metro H score. How to obtain/derive w/in metro H separately for growth and loss metros? Can this only be calculated by aggregating up, rather than subtracting down?
+
+What about simple between places in growing and shrinking metros? Seems like a sensible thing to examine.
+
+Then group places into growing and shrinking
