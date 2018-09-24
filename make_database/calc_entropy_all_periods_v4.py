@@ -81,6 +81,12 @@ for p in periods:
 	############################################################
 	# calc btw loss metro component
 	############################################################
+	# create msa:name dict
+	msa_dict = {}
+	for i, x in df.iterrows():
+		if x['cbsa_geoid10'] not in msa_dict:
+			msa_dict[x['cbsa_geoid10']]=x['name10']
+
 	# group CBSAs into growing/shrinking using aggregated place pop
 	cols = ['cbsa_geoid10','pop{}'.format(start), 'pop{}'.format(end), 'white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
 	cbsas = df[cols].groupby('cbsa_geoid10').sum()
@@ -103,8 +109,8 @@ for p in periods:
 	# for each region, compare Em to Er, summing across regions
 	# need to compare CBSAs to region in which they are nested
 	chg_levels = ['growth', 'loss']
-	Hmr = 0
  	for l in chg_levels:
+		Hmr = 0
 		for i, x in regions.iterrows():
 			Tr = x['pop{}'.format(end)] 
 			Er = x['Er']
@@ -143,8 +149,6 @@ for p in periods:
 				Hpm += x2['pop{}'.format(end)] * (x['Em'] - x2['Ep'])
 		Hpm = (1.0 / (Tu * Eu)) * Hpm
 		print "Hpm {} metros: {}".format(l, round(Hpm, 3))
-
-
 	############################################################
 	# calc btw group component within CBSAs
 	############################################################
@@ -180,15 +184,21 @@ for p in periods:
 					data_dict[g][g2] += groups['pop{}'.format(end)].item() * (x['Em'] - groups['Eg'].item())
 					data_dict[g]['total'] += groups['pop{}'.format(end)].item() * (x['Em'] - groups['Eg'].item())
 
-				# if i=='34980':
-				# 	print "-" * 4
-				# 	print g2, groups['Eg'].item(), x['Em']		
-				if g=='growth' and g2=='loss' and not groups.empty:
-					if groups['Eg'].item() > x['Em']:
-						try:
-							print i, g2, groups['Eg'].item(), x['Em']
-						except:
-							print i, g2
+				# # print vals for growing metros where loss group diversity > metro diversity	
+				# if g=='growth' and g2=='loss' and not groups.empty:
+				# 	if groups['Eg'].item() > x['Em']:
+				# 		try:
+				# 			print i, msa_dict[i], g2, round(groups['Eg'].item(), 3), round(x['Em'],3)
+				# 		except:
+				# 			print i,  msa_dict[i], g2
+
+				# print vals for growing metros where loss group diversity > metro diversity	
+				if g=='loss' and g2=='loss' and not groups.empty:
+					# if groups['Eg'].item() > x['Em']:
+					try:
+						print i, msa_dict[i], g2, round(groups['Eg'].item(), 3), round(x['Em'],3)
+					except:
+						print i,  msa_dict[i], g2
 
 	# scale H
 	for g in levels:
@@ -199,6 +209,44 @@ for p in periods:
 	for k, v in data_dict.iteritems():
 		print k, v
 	print '+' * 2 
+
+	############################################################
+	# calc H separately for growth and loss metros, scaled to totals across grwoth/loss metros
+	############################################################
+	# group CBSAs into growing/shrinking using aggregated place pop
+	cbsas['chg_cat'] = -99
+	cbsas.loc[cbsas['chg{}{}'.format(start,end)] < 0, 'chg_cat'] = 'loss'
+	cbsas.loc[cbsas['chg{}{}'.format(start,end)] >= 0, 'chg_cat'] = 'growth'
+	print "+" * 25
+	print "count in each CBSA group"
+	print cbsas.groupby('chg_cat').size()
+
+	# aggregate CBSAs based on growth/loss
+	grouped_cbsas = cbsas.groupby('chg_cat').sum()
+	cols = ['white{}'.format(end), 'black{}'.format(end), 'asian{}'.format(end), 'hisp{}'.format(end), 'other{}'.format(end)]
+	for c in cols:
+		grouped_cbsas['p{}'.format(c)] = grouped_cbsas['{}'.format(c)] * 1.0 / grouped_cbsas[cols].sum(axis=1)
+	# calc diversity for aggregated growth/loss CBSAs
+	grouped_cbsas['Er'] = 0
+	for c in cols:
+		grouped_cbsas.loc[grouped_cbsas['p{}'.format(c)] > 0.0, 'Er'] += grouped_cbsas['p{}'.format(c)] * np.log(1.0/grouped_cbsas['p{}'.format(c)])
+	grouped_cbsas['Er'] = grouped_cbsas['Er'] / np.log(len(cols))
+	
+	print "+" * 10
+	levels = ['growth', 'loss']
+	# compare all places located within growth and loss metros
+	for l in levels:
+		Hmr = 0
+		# for all growth/loss metros
+		for i, x in cbsas.loc[cbsas['chg_cat']==l].iterrows():
+			# for all places within growth/loss metros
+			for i2, x2 in df.loc[df['cbsa_geoid10']==i].iterrows():
+				# take weighted diff of metro diversity and place diversity
+				Hmr += x2['pop{}'.format(end)] * (x['Em'] - x2['Ep'])
+		# scale by total pop and diversity of all places inside growth/loss metros
+		Hmr = Hmr * (1.0 / ( grouped_cbsas.ix[l]['Er'] * grouped_cbsas.ix[l]['pop{}'.format(end)]))
+		print "scaled entropy {} metros: {}".format(l, round(grouped_cbsas.ix[l]['Er'],3))
+		print "Hmr {} metros (scaled to metro group): {}".format(l, round(Hmr,3))
 
 
 con.close()

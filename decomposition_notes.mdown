@@ -61,4 +61,4 @@ Concern is less about contribution to overall H score, more about contribution t
 
 What about simple between places in growing and shrinking metros? Seems like a sensible thing to examine.
 
-Then group places into growing and shrinking
+Grouping places into growth/loss groups within growing or shrinking metros does not explain a substantial amount of between place segregation within metros. Would it be useful to examine a single representative metro to examine the contribution of its constituent places to overall btw place segregation? Each place would function like its own "group," with some places being more or less diverse than the metro in which they are nested. We could compare these contributions to population change in that place, even plotting them in 2d space, with pop change on the xaxis and contribution to metro segregation on the yaxis.
