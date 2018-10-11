@@ -14,8 +14,10 @@ cur = con.cursor()
 
 # pull data from table
 # cbsa = '19820'; cbsa_name = 'Detroit metro' # detroit
-cbsa = '17460'; cbsa_name = 'Cleveland metro'
+# cbsa = '17460'; cbsa_name = 'Cleveland metro'
 # cbsa = '12060'; cbsa_name = 'Atlanta metro'
+cbsa = '36420'; cbsa_name = 'OK city metro'
+
 years = ['00', '10']
 start = years[0]
 end = years[1]

@@ -32,7 +32,6 @@ fig, axes = plt.subplots(nrows=15, ncols=5, sharey=True, figsize=(12,22), squeez
 fig.tight_layout()
 # plt.subplots_adjust(hspace = 1)
 axli = axes.flatten()
-plt.rc('xtick', labelsize=8)
 ############################################################
 # calc metro-level segregation
 ############################################################
@@ -89,20 +88,22 @@ for k, v in cbsa_dict.iteritems():
 		# plot data
 		############################################################
 		ax=sns.boxplot(x=temp['diff'], y=temp['chg_cat'], order=['growth', 'loss'], ax=axli[count])
-		cbsa_name = v
-		if "-" in v:
-			cbsa_name = cbsa_name.split("-")[0]
-		else:
-			cbsa_name = cbsa_name.split(",")[0]
+		cbsa_name = v.split(',')[0]
+		if '-' in cbsa_name:
+			cbsa_name = cbsa_name.split('-')[0]
 		if cbsa_chg >= 0:
-			ax.set_title('{} (H = {})'.format(cbsa_name, round(Hpm,3)), color='green')
+			ax.set_title('{} (H = {})'.format(cbsa_name, round(Hpm,3)), color='blue')
 		else:
 			ax.set_title('{} (H = {})'.format(cbsa_name, round(Hpm,3)), color='red')		
 		# ax.title.set_text('{} (H = {})'.format(cbsa_name, round(Hpm,3)))			
 		ax.set_xlabel('')
+		ax.set_ylabel('')
+		ax.tick_params(axis='both', labelsize=8)
 		ax.title.set_size(8)
 	count+=1
 
+for i in range(71, 75):
+	fig.delaxes(axes.flatten()[i])
 
 outFile = "/home/eric/Documents/franklin/fowler/figures/metro_boxplots.png"
 plt.savefig(outFile, dpi=600, bbox_inches='tight')
