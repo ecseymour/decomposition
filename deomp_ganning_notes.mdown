@@ -1,0 +1,14 @@
+# decomp seg w/ shrinking cities
+
+Not all shrinking cities are located in a metro meeting our criteria related to principal city of a given size and n number of places, e.g., Gadsen city. 
+
+How many of these cities are included in our metros of interest? 48 of 80 of the shrinking cities are included in our sample of metros. __26 of 71 distinct metros in our sample contain one of our shrinking cities.__ 
+
+How many distinct metros? Several of the Michigan shrinking cities, for instance, are all in the Detroit metro. There list also includes CDPs, e.g., Towson CDP, Maryland.
+
+Why do Ganning's NHGIS codes appear to a digit too short on the right? Just add a 0 to join.
+
+So what are the sub-metropolitan groups for the decomposition? Does it make sense to take the "group" for shrinking cities to simply be the - usually - one shrinking city and all other places to be grouped as "other"? There are other shrinking places in these metros that are not on Ganning's list because they are too small, etc. Grouping them with all other places might make the other group more heterogeneous than desirable.
+
+Also not some growth metros do not have cities in ganning's table, see Phoenix. 
+
