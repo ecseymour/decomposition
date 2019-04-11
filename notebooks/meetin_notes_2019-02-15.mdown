@@ -1,0 +1,31 @@
+# Notes from CF 2/15/19
+Outline, from broad to focused on the way to key questions, then unpacking competing theories associated with key questions. Then repackaging findings in terms of broader questions again (this is what I am aiming for here).
+
+Cities are becoming more diverse across the board
+Shrinking cities may be a special case as the kinds of populations that are leaving will matter for diversity.
+We can imagine several processes that might be at work in shrinking cities
+-White dominant cities:
+--White flight dominant
+--White flight tempered with new destinations arrivals
+-In Minority majority cities
+--Minority exit
+--Minority exit tempered with new arrivals
+-In Diversie cities
+--White flight
+--Black exodus
+--New arrivals
+--White arrivals
+
+Clearly these are significantly different population processes with different interpretations and implications for demographic change
+
+We want to explore these processes in general for shrinking cities
+
+Finding 1: Shrinking cities are (mostly? often? never?) in metros that are (growing? shrinking?)
+Finding 2: Overall metros with shrinking cities are becoming more diverse
+FInding 3: Shrinking cities tend to be more diverse than their metros, but are beconoming less so over time (on average) with major exceptions
+Finding 4: The contributions to diversity changes in shrinking places are ___ (TBD)
+
+# My notes
+People also leave growing cities, but more people come to those places than leave. This analysis assumes there is something different about the race/ethnicity of outmovers and inmovers in shrinking cities than in other cities. Why would be believe this to be the case? We should probably compare trends in growing places to see if that is true. I also think it is important to disginguish between central cities and suburbs, as they are likely to have different baseline compositions and population dynamics.
+
+Do we wish to continue to adopt Ganning's definition of shrinking cities? I think this works for her research topic, but not for demographic research - it is too crude. Many of these "shrinking cities" gained population between 2000 and 2010.

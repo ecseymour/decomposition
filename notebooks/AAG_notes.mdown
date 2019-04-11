@@ -1,0 +1,49 @@
+# notes on AAG discussion with CF
+
+Met with CF at AAG to discuss depop + segregation paper. Based on the problems I identified in the prior approach of decomposing segregation based on Ganning's list of shrinking cities - principally the fact several of these cities increased in size in recent decades - we decided to revise the analysis to consider each of every possible combination - for each loss metro - as follows:
+
+* PC|G|ID (Principal City|Pop. Growth|Increasing Diversity) Not likely 
+* PC|G|DD (Principal City|Pop. Growth|Decreasing Diversity) Not likely
+* PC|L|ID (Pop. Loss) Possible early White flight
+* PC|L|LD Possible White flight after tipping point 
+* NPC|G|ID (Non Principal City) Possible suburbanization of minority pop. 
+* NPC|G|DD Possible White flight from maj. minority suburbs with growing minority pop.
+* NPC|L|ID Possible inner-ring White flight
+* NPC|L|DD Not likely
+
+First step is to generate a matrix showing how many metros exhibit different change in pop. and diversity in principal cities and non-principal places between 1990 and 2010.
+
+How many loss metros 1990-2010? Must contain requisite number of places. There are only seven loss metros in our sample...
+
+
+How many shrinking metros based on sum of places (excluding CDPs)?
+
+```sql
+SELECT A.CBSA, SUM(B.pop90), SUM(C.pop10)
+FROM nhgis_cbsa_data AS A
+JOIN subset_places_90_00 AS B
+ON A.GISJOIN = "G"||B.cbsa_geoid10
+JOIN subset_places_00_10 AS C
+ON A.GISJOIN = "G"||C.cbsa_geoid10
+GROUP BY A.CBSA
+HAVING SUM(B.pop90) > SUM(C.pop10)
+;
+```
+
+13 metros
+
+**Need to code cities as principal non-principal**
+
+
+## steps
+
+__principal cities__
+Need to identify places in the sample as principal cities and non-principal places. I had been using a file identifying places as principal cities in 2009. In a first pass at this analysis, I believe we are interested in looking at change over a single period, not comparing change between different intervals. So if we first want to examine changes in pop. and diversity 1990-2010, do we need to be concerned about some places moving in and out of principal city status? This was not a concern for the past methodology, where principal city status was used only to select metros for our sample. In this case, the status is a central feature of place-level analysis. One issue is the discrepancy between nhgisplace codes and census fips codes, including the "G" prefix.  _Perhaps find NHGIS file with nhgiscodes and principal city codes. No, there does not seem to be one._ 
+
+From the NHGIS docs:
+
+Place NHGIS code:
+> 6 digits ending with a "0" or "5". The first 5 digits generally correspond to the place FIPS code if the place is identified in recent (1990 or later) census data. NHGIS place codes ending in "5" identify historical places that do not appear in recent census data. Codes ending in "0" identify places that do appear in recent census data.
+
+
+
