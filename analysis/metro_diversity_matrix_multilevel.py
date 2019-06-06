@@ -110,10 +110,6 @@ df['div_diff'] = df['E10'] - df['E90']
 df['div_diff_binary'] = 'MD' # more diverse
 df.loc[df['div_diff'] < 0, 'div_diff_binary'] = 'LD' # less diverse
 
-# # calc relative diff in each period
-df['div_diff_2']
-df['']
-
 
 df['pop_chg_binary'] = 'G' # pop growth
 df.loc[df['pop_chg'] < 0, 'pop_chg_binary'] = 'L' # pop loss 
